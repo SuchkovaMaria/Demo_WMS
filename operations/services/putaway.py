@@ -13,10 +13,10 @@ def create_putaway_tasks(order_id, employee_id):
     except Order.DoesNotExist:
         return 0, "Заявка не найдена"
 
-    if order.order_type != 'in':
+    if order.order_type != "in":
         return 0, "Это не входящая заявка"
 
-    if order.status != 'received':
+    if order.status != "received":
         return 0, f"Заявку нельзя разместить (статус: {order.get_status_display()})"
 
     try:
@@ -24,14 +24,14 @@ def create_putaway_tasks(order_id, employee_id):
     except Employee.DoesNotExist:
         return 0, "Сотрудник не найден"
 
-    if employee.group not in ('receiver', 'picker'):
+    if employee.group not in ("receiver", "picker"):
         return 0, f"Сотрудник {employee.name} не может размещать"
 
     # Находим закрытые паллеты в зоне приёмки
     pallets = StorageUnit.objects.filter(
-        type='pallet',
+        type="pallet",
         is_closed=True,
-        current_cell__rack__zone__zone_type='receiving',
+        current_cell__rack__zone__zone_type="receiving",
     )
 
     if not pallets.exists():
@@ -42,20 +42,20 @@ def create_putaway_tasks(order_id, employee_id):
         for pallet in pallets:
             # Проверяем, нет ли уже активного задания на эту паллету через TaskLine
             existing = Task.objects.filter(
-                task_type='putaway',
+                task_type="putaway",
                 lines__storage_unit=pallet,
-                status__in=['new', 'in_progress'],
+                status__in=["new", "in_progress"],
             ).exists()
             if existing:
                 continue
 
             # Создаём задание и строку задания
             task = Task.objects.create(
-                task_type='putaway',
+                task_type="putaway",
                 source_cell=pallet.current_cell,
                 target_cell=None,
                 quantity=pallet.total_volume,
-                status='new',
+                status="new",
             )
             TaskLine.objects.create(
                 task=task,
@@ -64,8 +64,8 @@ def create_putaway_tasks(order_id, employee_id):
             )
             created_count += 1
 
-        order.status = 'putaway'
-        order.save(update_fields=['status'])
+        order.status = "putaway"
+        order.save(update_fields=["status"])
 
     return created_count, f"Создано {created_count} заданий на размещение"
 
@@ -76,10 +76,10 @@ def confirm_putaway(task_id, target_cell_barcode, employee_id):
     except Task.DoesNotExist:
         return False, "Задание не найдено"
 
-    if task.task_type != 'putaway':
+    if task.task_type != "putaway":
         return False, "Это не задание на размещение"
 
-    if task.status not in ('new', 'in_progress'):
+    if task.status not in ("new", "in_progress"):
         return False, f"Задание нельзя выполнить (статус: {task.get_status_display()})"
 
     try:
@@ -87,7 +87,7 @@ def confirm_putaway(task_id, target_cell_barcode, employee_id):
     except Employee.DoesNotExist:
         return False, "Сотрудник не найден"
 
-    if employee.group not in ('receiver', 'picker'):
+    if employee.group not in ("receiver", "picker"):
         return False, f"Сотрудник {employee.name} не может размещать"
 
     try:
@@ -95,7 +95,7 @@ def confirm_putaway(task_id, target_cell_barcode, employee_id):
     except Cell.DoesNotExist:
         return False, f"Ячейка {target_cell_barcode} не найдена"
 
-    if target_cell.rack.zone.zone_type != 'storage':
+    if target_cell.rack.zone.zone_type != "storage":
         return False, f"Ячейка {target_cell.barcode} не в зоне хранения"
 
     if target_cell.is_blocked_in:
@@ -114,19 +114,19 @@ def confirm_putaway(task_id, target_cell_barcode, employee_id):
 
     with transaction.atomic():
         pallet.current_cell = target_cell
-        pallet.save(update_fields=['current_cell'])
+        pallet.save(update_fields=["current_cell"])
 
-        task.status = 'done'
+        task.status = "done"
         task.target_cell = target_cell
         task.assignee = employee
-        task.save(update_fields=['status', 'target_cell', 'assignee'])
+        task.save(update_fields=["status", "target_cell", "assignee"])
 
         line.is_completed = True
         line.completed_at = timezone.now()
-        line.save(update_fields=['is_completed', 'completed_at'])
+        line.save(update_fields=["is_completed", "completed_at"])
 
         OperationLog.objects.create(
-            operation_type='putaway',
+            operation_type="putaway",
             task=task,
             executor=employee,
             source_cell=old_cell,
@@ -150,21 +150,21 @@ def finish_putaway_order(order_id, employee_id):
     except Order.DoesNotExist:
         return False, "Заявка не найдена"
 
-    if order.status != 'putaway':
+    if order.status != "putaway":
         return False, f"Заявка не в размещении (статус: {order.get_status_display()})"
 
     # Активные задания по заявке — по source_cell из зоны приёмки.
     # Проще: ищем задания типа putaway, у которых source_cell в зоне receiving,
     # и которые ещё не done.
     active = Task.objects.filter(
-        task_type='putaway',
-    ).exclude(status='done')
+        task_type="putaway",
+    ).exclude(status="done")
 
     if active.exists():
         return False, f"Есть незавершённые задания на размещение: {active.count()}"
 
     with transaction.atomic():
-        order.status = 'stored'
-        order.save(update_fields=['status'])
+        order.status = "stored"
+        order.save(update_fields=["status"])
 
     return True, f"Заявка {order.order_number} полностью размещена (stored)"

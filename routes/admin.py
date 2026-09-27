@@ -13,4 +13,7 @@ class PickingRouteAdmin(admin.ModelAdmin):
         "is_active",
     )
 
-    search_fields = ("name", "strategy",)
+    search_fields = (
+        "name",
+        "strategy",
+    )

@@ -16,11 +16,6 @@ class ZoneAdmin(admin.ModelAdmin):
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "name",
-        "group",
-        "barcode"
-    )
+    list_display = ("id", "name", "group", "barcode")
     list_filter = ("group",)
-    search_fields = ("barcode","name")
+    search_fields = ("barcode", "name")

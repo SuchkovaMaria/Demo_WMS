@@ -18,7 +18,10 @@ class TaskAdmin(admin.ModelAdmin):
         "wave",
     )
 
-    search_fields = ("assignee", "status",)
+    search_fields = (
+        "assignee",
+        "status",
+    )
 
 
 @admin.register(TaskLine)
@@ -32,4 +35,7 @@ class TaskLineAdmin(admin.ModelAdmin):
         "completed_at",
     )
 
-    search_fields = ("task", "storage_unit",)
+    search_fields = (
+        "task",
+        "storage_unit",
+    )

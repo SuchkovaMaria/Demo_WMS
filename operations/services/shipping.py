@@ -20,7 +20,7 @@ def ship_order(order_id, employee_id, gate_cell_id=None):
     except Order.DoesNotExist:
         return False, "Заявка не найдена"
 
-    if order.status != 'picked':
+    if order.status != "picked":
         return False, f"Заявку нельзя отгрузить (статус: {order.status})"
 
     try:
@@ -29,11 +29,11 @@ def ship_order(order_id, employee_id, gate_cell_id=None):
         return False, "Сотрудник не найден"
 
     # проверка что это сотрудник отгрузки
-    if employee.group != 'shipper':
+    if employee.group != "shipper":
         return False, f"Сотрудник {employee.name} не является отгрузчиком (группа: {employee.get_group_display()})"
 
     # 1. Находим все тары, привязанные к заданиям этой заявки
-    tasks = Task.objects.filter(order_line__order=order, task_type='pick')
+    tasks = Task.objects.filter(order_line__order=order, task_type="pick")
     totes = set()
     for task in tasks:
         if task.picking_tote:
@@ -52,7 +52,7 @@ def ship_order(order_id, employee_id, gate_cell_id=None):
     else:
         # Ищем ячейку в зоне 'gate' (ворота)
         target_cell = Cell.objects.filter(
-            rack__zone__zone_type='gate',
+            rack__zone__zone_type="gate",
         ).first()
         if not target_cell:
             return False, "Нет ячейки в зоне ворот."
@@ -62,10 +62,10 @@ def ship_order(order_id, employee_id, gate_cell_id=None):
         for tote in totes:
             old_cell = tote.current_cell
             tote.current_cell = target_cell
-            tote.save(update_fields=['current_cell'])
+            tote.save(update_fields=["current_cell"])
 
             OperationLog.objects.create(
-                operation_type='ship',
+                operation_type="ship",
                 executor=employee,
                 source_cell=old_cell,
                 target_cell=target_cell,
@@ -74,7 +74,7 @@ def ship_order(order_id, employee_id, gate_cell_id=None):
             )
 
         # 4. Меняем статус заявки
-        order.status = 'shipped'
-        order.save(update_fields=['status'])
+        order.status = "shipped"
+        order.save(update_fields=["status"])
 
     return True, f"Заявка {order.order_number} отгружена. Тары: {', '.join(t.barcode for t in totes)}"

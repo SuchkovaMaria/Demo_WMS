@@ -25,8 +25,13 @@ class RackAdmin(admin.ModelAdmin):
         "is_blocked_out",
         "barcode",
     )
-    list_filter = ("rack","is_blocked_in","is_blocked_out",)
+    list_filter = (
+        "rack",
+        "is_blocked_in",
+        "is_blocked_out",
+    )
     search_fields = ("barcode",)
+
 
 @admin.register(StorageUnit)
 class StorageUnitAdmin(admin.ModelAdmin):

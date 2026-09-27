@@ -16,6 +16,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     search_fields = ("order_number", "counterparty", "created_at")
 
+
 @admin.register(OrderLine)
 class OrderLineAdmin(admin.ModelAdmin):
     list_display = (
@@ -37,6 +38,7 @@ class ReservationAdmin(admin.ModelAdmin):
     )
 
     search_fields = ("storage_unit",)
+
 
 @admin.register(Wave)
 class WaveAdmin(admin.ModelAdmin):

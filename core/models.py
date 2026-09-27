@@ -6,7 +6,13 @@ from users.models import User
 class Zone(models.Model):
     """Модель зоны склада"""
 
-    ZONE_TYPES = [('receiving', 'Приемка'), ('storage', 'Хранение'), ('picking', 'Отбор'), ('shipping', 'Отгрузка'), ('gate', 'Ворота отгрузки')]
+    ZONE_TYPES = [
+        ("receiving", "Приемка"),
+        ("storage", "Хранение"),
+        ("picking", "Отбор"),
+        ("shipping", "Отгрузка"),
+        ("gate", "Ворота отгрузки"),
+    ]
 
     name = models.CharField(max_length=100, unique=True)
     zone_type = models.CharField(max_length=20, choices=ZONE_TYPES)
@@ -25,9 +31,11 @@ class Zone(models.Model):
 class Employee(models.Model):
     """Модель сотрудника"""
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     name = models.CharField(max_length=150)  # ФИО
-    group = models.CharField(max_length=50, choices=[('picker', 'Отбор'), ('receiver', 'Приемка'), ('shipper', 'Отгрузка')])
+    group = models.CharField(
+        max_length=50, choices=[("picker", "Отбор"), ("receiver", "Приемка"), ("shipper", "Отгрузка")]
+    )
     barcode = models.CharField(max_length=50, unique=True)  # ШК сотрудника
 
     class Meta:
